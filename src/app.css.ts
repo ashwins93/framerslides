@@ -10,13 +10,10 @@ globalStyle("body", {
 });
 
 export const wrapper = style({
-  display: "flex",
-  alignItems: "center",
-  overflow: "hidden",
   position: "relative",
-  margin: "0 auto",
-  width: "min-content",
-  gap: 8,
+  height: 450,
+  background: "purple",
+  overflow: "hidden",
 });
 
 export const card = recipe({

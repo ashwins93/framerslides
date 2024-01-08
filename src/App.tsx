@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { card, wrapper } from "./app.css";
-import { MotionStyle, motion } from "framer-motion";
+import { MotionStyle, TargetAndTransition, motion } from "framer-motion";
 
 const items = [
   { title: "1", color: "orange" },
@@ -11,35 +11,75 @@ const items = [
   { title: "6", color: "yellow" },
 ];
 
+const SIZES = {
+  lg: {
+    width: 250,
+  },
+  md: {
+    width: 190,
+  },
+};
+
 function Card({
   title,
   color,
   size,
   selected,
-  hideLeft,
-  hideRight,
+  x,
+  z,
 }: {
   title: string;
   color: string;
   size: "md" | "lg";
   selected: boolean;
-  hideLeft: boolean;
-  hideRight: boolean;
+  x: string;
+  z: number;
 }) {
+  const height = (SIZES[size].width / 16) * 9;
   const styles: MotionStyle = {
+    // aspectRatio: "16/9",
+    // zIndex: selected ? 1 : 0,
+    width: SIZES[size].width,
+    height,
+    position: "absolute",
+    top: `calc(50% - ${height / 2}px)`,
+    left: `calc(50% + ${x})`,
     background: color,
+    // transitionEnd: {
+    zIndex: z,
   };
+
+  const animate: TargetAndTransition = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    y: "-50%",
+    background: color,
+    x,
+    // transitionEnd: {
+    zIndex: selected ? 1 : 0,
+    // },
+  };
+
+  console.log("animate", animate);
 
   return (
     <motion.div
       style={styles}
+      // initial={false}
+      // animate={animate}
+      transition={{
+        type: "spring",
+        bounce: 0.25,
+        // duration: 10,
+      }}
       layout
-      className={card({
-        size,
-        selected,
-        hideLeft,
-        hideRight,
-      })}
+      // className={card({
+      //   size,
+      //   selected,
+      //   hideLeft,
+      //   hideRight,
+      // })}
     >
       {title}
     </motion.div>
@@ -65,6 +105,8 @@ const getIndexes = (current: number) => [
   getNext(current, items.length, 3),
 ];
 
+const CENTER = 3;
+
 function App() {
   const [selected, setSelected] = useState(0);
 
@@ -73,7 +115,7 @@ function App() {
       key: `${idx}-${Math.random()}`,
       idx,
       item: items[idx],
-    })),
+    }))
   );
 
   const handleNext = () => {
@@ -107,26 +149,42 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <button onClick={handlePrev}>Prev</button>
-      <motion.div className={wrapper} layout>
-        {slides.map((val, i) => {
-          const item = val.item;
+    <div className={wrapper}>
+      <button style={{ position: "absolute", top: 0 }} onClick={handlePrev}>
+        Prev
+      </button>
+      {/* <motion.div className={wrapper} layout> */}
+      {slides.map((val, i) => {
+        const item = val.item;
+        const direction = i < CENTER ? -1 : 1;
+        const distanceFromCenter =
+          Math.abs(CENTER - i) - (direction === 1 ? 1 : 0);
 
-          return (
-            <Card
-              hideLeft={i === 0}
-              key={val.key}
-              title={item.title}
-              color={item.color}
-              size={selected === val.idx ? "lg" : "md"}
-              selected={selected === val.idx}
-              hideRight={i === slides.length - 1}
-            />
-          );
-        })}
-      </motion.div>
-      <button onClick={handleNext}>Next</button>
+        const posX = `${
+          direction * SIZES.md.width * distanceFromCenter +
+          direction * distanceFromCenter * 20 +
+          direction * 20
+        }px`;
+
+        return (
+          <Card
+            x={i === CENTER ? `-${SIZES.lg.width / 2}px` : posX}
+            z={10 - Math.abs(CENTER - i)}
+            key={val.key}
+            title={item.title}
+            color={item.color}
+            size={selected === val.idx ? "lg" : "md"}
+            selected={selected === val.idx}
+          />
+        );
+      })}
+      {/* </motion.div> */}
+      <button
+        style={{ position: "absolute", top: 0, right: 0 }}
+        onClick={handleNext}
+      >
+        Next
+      </button>
     </div>
   );
 }
