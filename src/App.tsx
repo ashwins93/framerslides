@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { card, wrapper } from "./app.css";
 import { MotionStyle, TargetAndTransition, motion } from "framer-motion";
+
+import { Dialog, DialogContent, DialogOverlay } from "@reach/dialog";
+import "@reach/dialog/styles.css";
 
 const items = [
   { title: "1", color: "orange" },
@@ -49,20 +52,6 @@ function Card({
     zIndex: z,
   };
 
-  const animate: TargetAndTransition = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    y: "-50%",
-    background: color,
-    x,
-    // transitionEnd: {
-    zIndex: selected ? 1 : 0,
-    // },
-  };
-
-  console.log("animate", animate);
-
   return (
     <motion.div
       style={styles}
@@ -110,6 +99,8 @@ const CENTER = 3;
 function App() {
   const [selected, setSelected] = useState(0);
 
+  const [dialog, setDialog] = useState(false);
+
   const [slides, setSlides] = useState(
     getIndexes(selected).map((idx) => ({
       key: `${idx}-${Math.random()}`,
@@ -117,6 +108,8 @@ function App() {
       item: items[idx],
     }))
   );
+
+  const constraintRef = useRef(null);
 
   const handleNext = () => {
     setSelected((prev) => (prev + 1) % items.length);
@@ -149,43 +142,78 @@ function App() {
   };
 
   return (
-    <div className={wrapper}>
-      <button style={{ position: "absolute", top: 0 }} onClick={handlePrev}>
-        Prev
-      </button>
-      {/* <motion.div className={wrapper} layout> */}
-      {slides.map((val, i) => {
-        const item = val.item;
-        const direction = i < CENTER ? -1 : 1;
-        const distanceFromCenter =
-          Math.abs(CENTER - i) - (direction === 1 ? 1 : 0);
+    <>
+      <div className={wrapper}>
+        <button style={{ position: "absolute", top: 0 }} onClick={handlePrev}>
+          Prev
+        </button>
+        {/* <motion.div className={wrapper} layout> */}
+        {slides.map((val, i) => {
+          const item = val.item;
+          const direction = i < CENTER ? -1 : 1;
+          const distanceFromCenter =
+            Math.abs(CENTER - i) - (direction === 1 ? 1 : 0);
 
-        const posX = `${
-          direction * SIZES.md.width * distanceFromCenter +
-          direction * distanceFromCenter * 20 +
-          direction * 20
-        }px`;
+          const posX = `${
+            direction * SIZES.md.width * distanceFromCenter +
+            direction * distanceFromCenter * 20 +
+            direction * 20
+          }px`;
 
-        return (
-          <Card
-            x={i === CENTER ? `-${SIZES.lg.width / 2}px` : posX}
-            z={10 - Math.abs(CENTER - i)}
-            key={val.key}
-            title={item.title}
-            color={item.color}
-            size={selected === val.idx ? "lg" : "md"}
-            selected={selected === val.idx}
-          />
-        );
-      })}
-      {/* </motion.div> */}
-      <button
-        style={{ position: "absolute", top: 0, right: 0 }}
-        onClick={handleNext}
-      >
-        Next
-      </button>
-    </div>
+          return (
+            <Card
+              x={i === CENTER ? `-${SIZES.lg.width / 2}px` : posX}
+              z={10 - Math.abs(CENTER - i)}
+              key={val.key}
+              title={item.title}
+              color={item.color}
+              size={selected === val.idx ? "lg" : "md"}
+              selected={selected === val.idx}
+            />
+          );
+        })}
+        {/* </motion.div> */}
+        <button
+          style={{ position: "absolute", top: 0, right: 0 }}
+          onClick={handleNext}
+        >
+          Next
+        </button>
+      </div>
+      <div style={{ position: "relative", overflow: "hidden" }}>
+        <motion.div
+          ref={constraintRef}
+          style={{ display: "flex", gap: 20 }}
+          drag="x"
+          dragElastic={0}
+          dragTransition={{
+            timeConstant: 150,
+            // bounceStiffness: 0,
+            // bounceDamping: 100,
+            // restDelta: 10,
+            // max: 100,
+            // min: 0,
+            power: 0.5,
+            modifyTarget: (target) => Math.round(target / 320) * 320,
+          }}
+          dragConstraints={{ left: -5356, right: 0 }}
+        >
+          {Array.from({ length: 20 }).map((_, i) => {
+            return (
+              <div
+                key={i}
+                style={{
+                  width: 300,
+                  height: 150,
+                  background: "orangered",
+                  flexShrink: 0,
+                }}
+              />
+            );
+          })}
+        </motion.div>
+      </div>
+    </>
   );
 }
 
