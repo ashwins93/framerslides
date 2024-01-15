@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { card, wrapper } from "./app.css";
 import { MotionStyle, TargetAndTransition, motion } from "framer-motion";
 
@@ -100,6 +100,7 @@ function App() {
   const [selected, setSelected] = useState(0);
 
   const [dialog, setDialog] = useState(false);
+  const [maxOffset, setMaxOffset] = useState(0);
 
   const [slides, setSlides] = useState(
     getIndexes(selected).map((idx) => ({
@@ -109,7 +110,7 @@ function App() {
     }))
   );
 
-  const constraintRef = useRef(null);
+  const constraintRef = useRef<HTMLDivElement>(null);
 
   const handleNext = () => {
     setSelected((prev) => (prev + 1) % items.length);
@@ -140,6 +141,13 @@ function App() {
       return newSlides;
     });
   };
+
+  useEffect(() => {
+    setMaxOffset(
+      (constraintRef.current?.clientWidth ?? 0) -
+        (constraintRef.current?.scrollWidth ?? 0)
+    );
+  }, []);
 
   return (
     <>
@@ -188,15 +196,13 @@ function App() {
           dragElastic={0}
           dragTransition={{
             timeConstant: 150,
-            // bounceStiffness: 0,
-            // bounceDamping: 100,
-            // restDelta: 10,
-            // max: 100,
-            // min: 0,
             power: 0.5,
             modifyTarget: (target) => Math.round(target / 320) * 320,
           }}
-          dragConstraints={{ left: -5356, right: 0 }}
+          dragConstraints={{
+            left: maxOffset,
+            right: 0,
+          }}
         >
           {Array.from({ length: 20 }).map((_, i) => {
             return (
